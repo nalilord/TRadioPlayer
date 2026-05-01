@@ -11,6 +11,8 @@ Native Delphi/Pascal internet radio playback built directly on FFmpeg 8 headers.
   FFmpeg 8 Delphi/Pascal header translations used by the player, based on the DelphiFFmpeg.com header set and updated in this repository for FFmpeg 8.1.
 - `ConsoleRadioPlayer/`
   A real console radio player built on top of the reusable engine and reusable `TRadioConsoleUI`.
+- `SDLRadioPlayer/`
+  A separate SDL3-based GUI player built on top of the same `TRadioPlayer` library.
 - `build.sh`
   Optional build helper for `Win32` and `Win64`.
 - `build-fpc.sh`
@@ -49,6 +51,8 @@ Native Delphi/Pascal internet radio playback built directly on FFmpeg 8 headers.
   Linux backend using the PulseAudio simple API.
 - `ConsoleRadioPlayer/ConsoleRadioPlayer.dpr`
   Standalone console radio player host.
+- `SDLRadioPlayer/SDLRadioPlayer.dpr`
+  Standalone SDL3 GUI radio player host.
 
 ## Requirements
 
@@ -78,11 +82,18 @@ Open:
 ConsoleRadioPlayer\ConsoleRadioPlayer.dpr
 ```
 
+or:
+
+```text
+SDLRadioPlayer\SDLRadioPlayer.dpr
+```
+
 Project search path should include:
 
 ```text
 Source
 Headers
+C:\Path\To\SDL3\Bindings\Units
 C:\Path\To\MfPack\src
 ```
 
@@ -96,12 +107,14 @@ Win64:
 
 ```bash
 ./build.sh ConsoleRadioPlayer/ConsoleRadioPlayer.dpr Win64
+./build.sh SDLRadioPlayer/SDLRadioPlayer.dpr Win64
 ```
 
 Win32:
 
 ```bash
 ./build.sh ConsoleRadioPlayer/ConsoleRadioPlayer.dpr Win32
+./build.sh SDLRadioPlayer/SDLRadioPlayer.dpr Win32
 ```
 
 Build outputs go to:
@@ -145,6 +158,12 @@ List WASAPI devices:
 
 ```text
 Bin\win64\ConsoleRadioPlayer.exe --list-devices
+```
+
+SDL GUI player:
+
+```text
+Bin\win64\SDLRadioPlayer.exe
 ```
 
 Linux `PulseAudio` backend:
@@ -217,6 +236,7 @@ This repository is in a usable V1/V1.5 state for a native Delphi radio player:
 - richer automated stress tests
 - optional GUI component wrappers
 - further extraction of `TRadioConsoleUI` into a standalone generic console UI project
+- richer SDL GUI controls and station management
 
 ## License
 

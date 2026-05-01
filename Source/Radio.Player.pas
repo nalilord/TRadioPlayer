@@ -197,13 +197,15 @@ type
     FOutput: TAudioOutput;
     FOwner: TRadioPlayer;
     FPrebufferBytes: Integer;
+    FReadChunkBytes: Integer;
     FStopEvent: TEvent;
     FTempBuffer: TBytes;
   protected
     procedure Execute; override;
   public
     constructor Create(AOwner: TRadioPlayer; AOutput: TAudioOutput;
-      ABuffer: TRadioPCMBuffer; AStopEvent: TEvent; APrebufferBytes: Integer);
+      ABuffer: TRadioPCMBuffer; AStopEvent: TEvent; APrebufferBytes: Integer;
+      ABytesPerSecond: Integer);
   end;
 
   TRadioSession = class
@@ -222,7 +224,10 @@ type
   end;
 
 constructor TRadioOutputThread.Create(AOwner: TRadioPlayer; AOutput: TAudioOutput;
-  ABuffer: TRadioPCMBuffer; AStopEvent: TEvent; APrebufferBytes: Integer);
+  ABuffer: TRadioPCMBuffer; AStopEvent: TEvent; APrebufferBytes: Integer;
+  ABytesPerSecond: Integer);
+var
+  BytesPerFrame: Integer;
 begin
   inherited Create(False);
   FreeOnTerminate := False;
@@ -231,7 +236,25 @@ begin
   FBuffer := ABuffer;
   FStopEvent := AStopEvent;
   FPrebufferBytes := APrebufferBytes;
-  SetLength(FTempBuffer, 32768);
+  BytesPerFrame := 4;
+  if Assigned(FOutput) and (FOutput.BytesPerFrame > 0) then
+    BytesPerFrame := FOutput.BytesPerFrame;
+
+  if ABytesPerSecond > 0 then
+    FReadChunkBytes := ABytesPerSecond div 100
+  else
+    FReadChunkBytes := 4096;
+
+  if FReadChunkBytes < BytesPerFrame * 64 then
+    FReadChunkBytes := BytesPerFrame * 64
+  else if FReadChunkBytes > 16384 then
+    FReadChunkBytes := 16384;
+
+  FReadChunkBytes := (FReadChunkBytes div BytesPerFrame) * BytesPerFrame;
+  if FReadChunkBytes <= 0 then
+    FReadChunkBytes := BytesPerFrame;
+
+  SetLength(FTempBuffer, FReadChunkBytes);
 end;
 
 procedure TRadioOutputThread.Execute;
@@ -267,7 +290,7 @@ begin
         end;
       end;
 
-      ReadBytes := FBuffer.Read(@FTempBuffer[0], Length(FTempBuffer), 50, FStopEvent);
+      ReadBytes := FBuffer.Read(@FTempBuffer[0], Length(FTempBuffer), 10, FStopEvent);
       if ReadBytes > 0 then
       begin
         UnderflowActive := False;
@@ -1300,7 +1323,7 @@ begin
 
         Session.PCMBuffer := TRadioPCMBuffer.Create(BufferCapacityBytes);
         Session.OutputThread := TRadioOutputThread.Create(Self, Session.Output,
-          Session.PCMBuffer, FStopEvent, PrebufferBytes);
+          Session.PCMBuffer, FStopEvent, PrebufferBytes, BytesPerSecond);
 
         NewMetadata := Session.StreamClient.Metadata;
         NewMetadata.CodecName := UTF8PtrToString(avcodec_get_name(Session.Decoder.CodecContext^.codec_id));

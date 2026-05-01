@@ -350,17 +350,23 @@
     {$ERROR FFVCL needs version 2.6.0 or above}
   {$IFEND}
   {$MODE Delphi}
-  {$ASMMODE Intel}
+  {$IF DEFINED(CPUX86) OR DEFINED(CPUX86_64)}
+    {$ASMMODE Intel}
+  {$IFEND}
   {$GOTO ON}           // alow goto
   {$PACKRECORDS 8}     // same as ALIGN 8 for Delphi, it will be reset to default by $MODE
   {$PACKENUM 4}        // same as MINENUMSIZE 4 for Delphi, it will be reset to default by $MODE
-  {$CALLING REGISTER}  // default calling convention is register
+  {$IF DEFINED(CPUX86) OR DEFINED(CPUX86_64)}
+    {$CALLING REGISTER}  // default calling convention is register
+  {$IFEND}
   {$DEFINE VCL_70}
   {$DEFINE DELPHI_7}
   {$IFDEF CPUX86_64}
     {$DEFINE CPUX64}
   {$ELSE}
-    {$DEFINE CPUX86}
+    {$IFDEF CPUX86}
+      {$DEFINE CPUX86}
+    {$ENDIF}
   {$ENDIF}
   {$WARN 4055 off : Conversion between ordinals and pointers is not portable}
 {$ENDIF}
